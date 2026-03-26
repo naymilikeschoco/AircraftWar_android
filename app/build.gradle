@@ -26,30 +26,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
-    }
-
-    sourceSets {
-        main {
-            // 复用你原 IntelliJ 工程里的纯 Java 逻辑代码（位于 Software_Construction-master/src）
-            java {
-                srcDirs += ["../../Software_Construction-master/src"]
-                // 排除 Swing/桌面 UI + 音频线程，Android 端会用自己的 GameView/GameEngine
-                exclude "**/application/GameTemplate.java"
-                exclude "**/application/SimpleGame.java"
-                exclude "**/application/NormalGame.java"
-                exclude "**/application/HardGame.java"
-                exclude "**/application/StartMenu.java"
-                exclude "**/application/Score.java"
-                exclude "**/application/HeroController.java"
-                exclude "**/application/MusicThread.java"
-            }
-
-            // 直接把原项目的图片目录打包成 Android assets，供 ImageManager 读取
-            assets.srcDirs += ["../../Software_Construction-master/src/images"]
-        }
     }
 }
 
