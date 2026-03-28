@@ -1,6 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!-- 原始模板保留：仅使用 GameView 的简洁版本 -->
+<!--
 <edu.hitsz.android.GameView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/gameView"
     android:layout_width="match_parent"
     android:layout_height="match_parent" />
+-->
+
+<!-- 带开始封面和难度选择的完整布局 -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 游戏主视图（开始后显示） -->
+    <edu.hitsz.android.GameView
+        android:id="@+id/gameView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <!-- 开始封面覆盖层 -->
+    <LinearLayout
+        android:id="@+id/startCover"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#CC000000">
+
+        <!-- 游戏标题 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="飞机大战"
+            android:textSize="48sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="60dp" />
+
+        <!-- 难度选择标签 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选择难度"
+            android:textSize="20sp"
+            android:textColor="#AAAAAA"
+            android:layout_marginBottom="20dp" />
+
+        <!-- 简单难度按钮 -->
+        <Button
+            android:id="@+id/btnEasy"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="简单"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 普通难度按钮 -->
+        <Button
+            android:id="@+id/btnNormal"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="普通"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 困难难度按钮 -->
+        <Button
+            android:id="@+id/btnHard"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:text="困难" />
+
+    </LinearLayout>
+
+</FrameLayout>
