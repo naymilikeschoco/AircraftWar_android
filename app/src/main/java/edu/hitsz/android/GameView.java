@@ -22,6 +22,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private volatile boolean running = false;
     private Thread gameThread;
 
+    private int difficulty;
+
     public GameView(Context context) {
         this(context, null);
     }
@@ -36,6 +38,29 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         // 先直接开一个难度（先确保能跑起来；后续再接菜单）
         game = new GameEngine("Easy");
+
+        setFocusable(true);
+    }
+
+    public GameView(Context context, AttributeSet attrs, int difficulty) {
+        super(context, attrs);
+        holder = getHolder();
+        holder.addCallback(this);
+
+        // 只初始化一次图片资源（assets -> Bitmap）
+        ImageManager.init(context.getApplicationContext());
+
+        switch (difficulty) {
+            case 1:
+                game = new GameEngine("Easy");
+                break;
+            case 2:
+                game = new GameEngine("Normal");
+                break;
+            case 3:
+                game = new GameEngine("Hard");
+                break;
+        }
 
         setFocusable(true);
     }
