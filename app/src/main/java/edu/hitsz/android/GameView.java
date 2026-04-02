@@ -10,19 +10,17 @@ import android.view.SurfaceView;
 
 import edu.hitsz.application.ImageManager;
 import edu.hitsz.application.Main;
+import edu.hitsz.audio.GameAudioEventListener;
+import edu.hitsz.audio.GameAudioManager;
 
-/**
- * Surface 渲染 + 触摸控制（将触摸点映射到逻辑坐标系 512x768）。
- */
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     private final SurfaceHolder holder;
+    private final GameAudioManager audioManager;
     private GameEngine game;
 
     private volatile boolean running = false;
     private Thread gameThread;
-
-    private int difficulty;
 
     public GameView(Context context) {
         this(context, null);
@@ -32,12 +30,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         super(context, attrs);
         holder = getHolder();
         holder.addCallback(this);
+        audioManager = new GameAudioManager(context);
 
-        // 只初始化一次图片资源（assets -> Bitmap）
         ImageManager.init(context.getApplicationContext());
-
-        // 先直接开一个难度（先确保能跑起来；后续再接菜单）
         game = new GameEngine("Easy");
+        bindAudioEvents();
 
         setFocusable(true);
     }
@@ -46,8 +43,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         super(context, attrs);
         holder = getHolder();
         holder.addCallback(this);
+        audioManager = new GameAudioManager(context);
 
-        // 只初始化一次图片资源（assets -> Bitmap）
         ImageManager.init(context.getApplicationContext());
 
         switch (difficulty) {
@@ -60,7 +57,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             case 3:
                 game = new GameEngine("Hard");
                 break;
+            default:
+                game = new GameEngine("Easy");
+                break;
         }
+        bindAudioEvents();
 
         setFocusable(true);
     }
@@ -68,6 +69,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
         running = true;
+        audioManager.startNormalBgm();
         gameThread = new Thread(this::runLoop, "aircraft-game-loop");
         gameThread.start();
     }
@@ -80,6 +82,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
         running = false;
+        audioManager.pauseAll();
         if (gameThread != null) {
             try {
                 gameThread.join(500);
@@ -94,10 +97,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         while (running) {
             long frameStart = System.currentTimeMillis();
 
-            // 更新逻辑
             game.tick();
 
-            // 渲染
             Canvas canvas = null;
             try {
                 canvas = holder.lockCanvas();
@@ -118,10 +119,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 }
             }
 
-            // 控制帧率
             long elapsed = System.currentTimeMillis() - frameStart;
             long sleepMs = frameMs - elapsed;
-            if (sleepMs < 1) sleepMs = 1;
+            if (sleepMs < 1) {
+                sleepMs = 1;
+            }
             try {
                 Thread.sleep(sleepMs);
             } catch (InterruptedException ignored) {
@@ -131,7 +133,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (event == null) return false;
+        if (event == null) {
+            return false;
+        }
 
         int action = event.getActionMasked();
         if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_MOVE) {
@@ -141,11 +145,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             int logicalX = (int) (x * Main.WINDOW_WIDTH / (float) getWidth());
             int logicalY = (int) (y * Main.WINDOW_HEIGHT / (float) getHeight());
 
-            // clamp 到逻辑边界
-            if (logicalX < 0) logicalX = 0;
-            if (logicalX > Main.WINDOW_WIDTH) logicalX = Main.WINDOW_WIDTH;
-            if (logicalY < 0) logicalY = 0;
-            if (logicalY > Main.WINDOW_HEIGHT) logicalY = Main.WINDOW_HEIGHT;
+            if (logicalX < 0) {
+                logicalX = 0;
+            }
+            if (logicalX > Main.WINDOW_WIDTH) {
+                logicalX = Main.WINDOW_WIDTH;
+            }
+            if (logicalY < 0) {
+                logicalY = 0;
+            }
+            if (logicalY > Main.WINDOW_HEIGHT) {
+                logicalY = Main.WINDOW_HEIGHT;
+            }
 
             game.setHeroLocation(logicalX, logicalY);
             return true;
@@ -153,5 +164,58 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         return super.onTouchEvent(event);
     }
-}
 
+    public void onPauseView() {
+        audioManager.pauseAll();
+    }
+
+    public void onResumeView() {
+        if (holder.getSurface().isValid()) {
+            audioManager.resumeBgm();
+        }
+    }
+
+    public void release() {
+        audioManager.release();
+    }
+
+    private void bindAudioEvents() {
+        game.setAudioEventListener(new GameAudioEventListener() {
+            @Override
+            public void onHeroShoot() {
+                // hero shoot sound disabled by request
+            }
+
+            @Override
+            public void onEnemyHit() {
+                audioManager.playBulletHit();
+            }
+
+            @Override
+            public void onSupplyCollected() {
+                audioManager.playGetSupply();
+            }
+
+            @Override
+            public void onBombExploded() {
+                audioManager.playBombExplosion();
+            }
+
+            @Override
+            public void onBossAppear() {
+                audioManager.startBossBgm();
+            }
+
+            @Override
+            public void onBossDefeated() {
+                audioManager.startNormalBgm();
+            }
+
+            @Override
+            public void onGameOver() {
+                audioManager.stopBgm();
+                audioManager.playGameOver();
+            }
+        });
+    }
+}

@@ -15,6 +15,7 @@ import edu.hitsz.bullet.BaseBullet;
 import edu.hitsz.basic.AbstractFlyingObject;
 import edu.hitsz.application.ImageManager;
 import edu.hitsz.application.Main;
+import edu.hitsz.audio.GameAudioEventListener;
 import edu.hitsz.factory.enemy.EnemyType;
 import edu.hitsz.factory.enemy.UnifiedEnemyFactory;
 import edu.hitsz.prop.AbstractProp;
@@ -84,6 +85,7 @@ public class GameEngine {
     private final List<AbstractProp> props;
 
     private final UnifiedEnemyFactory enemyFactory;
+    private GameAudioEventListener audioEventListener;
 
     private boolean gameOver = false;
 
@@ -145,6 +147,10 @@ public class GameEngine {
         return heroAircraft;
     }
 
+    public void setAudioEventListener(GameAudioEventListener audioEventListener) {
+        this.audioEventListener = audioEventListener;
+    }
+
     public void setHeroLocation(int logicalX, int logicalY) {
         if (gameOver) return;
         heroAircraft.setLocation(logicalX, logicalY);
@@ -170,6 +176,9 @@ public class GameEngine {
                 enemyFactory.enableRandom(eliteProbability, elitePlusProbability);
                 bossExists = true;
                 bossScoreThreshold += 1000;
+                if (audioEventListener != null) {
+                    audioEventListener.onBossAppear();
+                }
             }
             // 普通敌机生成逻辑
             else if (enemyAircraft.size() < enemyMaxNumber && !bossExists) {
@@ -193,6 +202,9 @@ public class GameEngine {
         if (heroAircraft.getHp() <= 0) {
             gameOver = true;
             lastScore = score;
+            if (audioEventListener != null) {
+                audioEventListener.onGameOver();
+            }
         }
     }
 
@@ -361,7 +373,11 @@ public class GameEngine {
         }
 
         if (heroAircraft.updateShootTimer(timeIntervalMs)) {
-            heroBullets.addAll(heroAircraft.shoot());
+            List<BaseBullet> newBullets = heroAircraft.shoot();
+            heroBullets.addAll(newBullets);
+            if (!newBullets.isEmpty() && audioEventListener != null) {
+                audioEventListener.onHeroShoot();
+            }
         }
     }
 
@@ -397,6 +413,9 @@ public class GameEngine {
                 if (enemy.crash(bullet)) {
                     enemy.decreaseHp(bullet.getPower());
                     bullet.vanish();
+                    if (audioEventListener != null) {
+                        audioEventListener.onEnemyHit();
+                    }
 
                     if (enemy.notValid()) {
                         if (enemy instanceof AbstractEnemy) {
@@ -407,6 +426,9 @@ public class GameEngine {
                             if (e instanceof BossEnemy) {
                                 bossExists = false;
                                 bossScoreThreshold += 500;
+                                if (audioEventListener != null) {
+                                    audioEventListener.onBossDefeated();
+                                }
                             }
                         }
                     }
@@ -426,6 +448,10 @@ public class GameEngine {
 
             if (heroAircraft.crash(prop)) {
                 if (prop instanceof BombProp) {
+                    if (audioEventListener != null) {
+                        audioEventListener.onSupplyCollected();
+                        audioEventListener.onBombExploded();
+                    }
                     BombProp bomb = (BombProp) prop;
                     for (AbstractAircraft enemy : enemyAircraft) {
                         if (!(enemy instanceof BossEnemy)) bomb.addObserver(enemy);
@@ -443,6 +469,9 @@ public class GameEngine {
                     score += bombScore;
                 } else {
                     // 普通道具：加血/火力等
+                    if (audioEventListener != null) {
+                        audioEventListener.onSupplyCollected();
+                    }
                     prop.effect(heroAircraft);
                 }
 
@@ -507,4 +536,3 @@ public class GameEngine {
         }
     }
 }
-

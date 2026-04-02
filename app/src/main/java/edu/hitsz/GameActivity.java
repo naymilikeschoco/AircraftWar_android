@@ -8,6 +8,8 @@ import edu.hitsz.android.GameView;
 
 public class GameActivity extends AppCompatActivity {
 
+    private GameView gameView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -16,7 +18,31 @@ public class GameActivity extends AppCompatActivity {
         Intent intent = getIntent();
         int difficulty = intent.getIntExtra("difficulty", 1); // 默认1=简单
 
-        GameView gameView = new GameView(this, null, difficulty);
+        gameView = new GameView(this, null, difficulty);
         setContentView(gameView);
+    }
+
+    @Override
+    protected void onPause() {
+        if (gameView != null) {
+            gameView.onPauseView();
+        }
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (gameView != null) {
+            gameView.onResumeView();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (gameView != null) {
+            gameView.release();
+        }
+        super.onDestroy();
     }
 }
