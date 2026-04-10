@@ -12,7 +12,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AircraftWar">
 
-        <!-- 封面：作为启动入口，保留 intent-filter -->
         <activity
             android:name=".CoverActivity"
             android:exported="true">
@@ -22,9 +21,12 @@
             </intent-filter>
         </activity>
 
-        <!-- 游戏界面：由Intent跳转启动，不需要 intent-filter -->
         <activity
             android:name=".GameActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".RankActivity"
             android:exported="false" />
 
     </application>

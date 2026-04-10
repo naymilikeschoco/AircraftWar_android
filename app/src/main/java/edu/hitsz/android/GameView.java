@@ -1,8 +1,12 @@
 package edu.hitsz.android;
 
-import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.content.Context;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -15,12 +19,19 @@ import edu.hitsz.audio.GameAudioManager;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
+    private static final int MSG_GAME_OVER = 1;
+    public static final String KEY_SCORE = "score";
+    public static final String KEY_DIFFICULTY = "difficulty";
+
     private final SurfaceHolder holder;
     private final GameAudioManager audioManager;
+    private final Handler uiHandler;
     private GameEngine game;
+    private GameOverListener gameOverListener;
 
     private volatile boolean running = false;
     private Thread gameThread;
+    private boolean gameOverHandled = false;
 
     public GameView(Context context) {
         this(context, null);
@@ -31,11 +42,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         holder = getHolder();
         holder.addCallback(this);
         audioManager = new GameAudioManager(context);
+        uiHandler = createUiHandler();
 
         ImageManager.init(context.getApplicationContext());
         game = new GameEngine("Easy");
         bindAudioEvents();
-
         setFocusable(true);
     }
 
@@ -44,9 +55,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         holder = getHolder();
         holder.addCallback(this);
         audioManager = new GameAudioManager(context);
+        uiHandler = createUiHandler();
 
         ImageManager.init(context.getApplicationContext());
-
         switch (difficulty) {
             case 1:
                 game = new GameEngine("Easy");
@@ -62,8 +73,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 break;
         }
         bindAudioEvents();
-
         setFocusable(true);
+    }
+
+    public void setGameOverListener(GameOverListener gameOverListener) {
+        this.gameOverListener = gameOverListener;
     }
 
     @Override
@@ -98,16 +112,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             long frameStart = System.currentTimeMillis();
 
             game.tick();
+            notifyGameOverIfNeeded();
 
             Canvas canvas = null;
             try {
                 canvas = holder.lockCanvas();
                 if (canvas != null) {
                     canvas.drawColor(Color.BLACK);
-
                     float scaleX = canvas.getWidth() / (float) Main.WINDOW_WIDTH;
                     float scaleY = canvas.getHeight() / (float) Main.WINDOW_HEIGHT;
-
                     canvas.save();
                     canvas.scale(scaleX, scaleY);
                     game.draw(canvas);
@@ -129,6 +142,33 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             } catch (InterruptedException ignored) {
             }
         }
+    }
+
+    private Handler createUiHandler() {
+        return new Handler(Looper.getMainLooper(), msg -> {
+            if (msg.what == MSG_GAME_OVER && gameOverListener != null) {
+                Bundle data = msg.getData();
+                gameOverListener.onGameOver(
+                        data.getInt(KEY_SCORE),
+                        data.getString(KEY_DIFFICULTY, "Easy")
+                );
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void notifyGameOverIfNeeded() {
+        if (!game.isGameOver() || gameOverHandled) {
+            return;
+        }
+        gameOverHandled = true;
+        Message message = uiHandler.obtainMessage(MSG_GAME_OVER);
+        Bundle data = new Bundle();
+        data.putInt(KEY_SCORE, game.getLastScore());
+        data.putString(KEY_DIFFICULTY, game.getDifficulty());
+        message.setData(data);
+        uiHandler.sendMessage(message);
     }
 
     @Override
@@ -183,7 +223,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         game.setAudioEventListener(new GameAudioEventListener() {
             @Override
             public void onHeroShoot() {
-                // hero shoot sound disabled by request
+                // disabled by request
             }
 
             @Override
