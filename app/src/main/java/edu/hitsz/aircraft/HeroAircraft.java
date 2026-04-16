@@ -129,6 +129,24 @@ public class HeroAircraft extends AbstractAircraft {
         this.setShootNum(1);
     }
 
+    public void resetForNewGame() {
+        if (powerUpTimer != null && powerUpTimer.isAlive()) {
+            powerUpTimer.interrupt();
+        }
+
+        this.hp = this.maxHp;
+        this.isValid = true;
+        this.speedX = 0;
+        this.speedY = 0;
+        this.shootTimer = 0;
+        this.setLocation(
+                edu.hitsz.application.Main.WINDOW_WIDTH / 2.0,
+                edu.hitsz.application.Main.WINDOW_HEIGHT
+                        - edu.hitsz.application.ImageManager.HERO_IMAGE.getHeight()
+        );
+        revertToDefaultShoot();
+    }
+
     @Override
     public void forward() {
         // 英雄机由鼠标控制，不通过forward函数移动

@@ -88,6 +88,7 @@ public class GameEngine {
         this.bossHp = getBossHp();
 
         heroAircraft = HeroAircraft.getInstance();
+        heroAircraft.resetForNewGame();
         heroAircraft.setShootCycle(heroShootCycle);
 
         enemyAircraft = new LinkedList<>();
