@@ -24,6 +24,14 @@
         android:textSize="16sp"
         android:layout_marginBottom="28dp" />
 
+    <Switch
+        android:id="@+id/switchAudio"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:text="Audio"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="20dp" />
+
     <Button
         android:id="@+id/btnEasy"
         android:layout_width="220dp"

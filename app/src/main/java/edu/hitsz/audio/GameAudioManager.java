@@ -41,9 +41,11 @@ public class GameAudioManager {
     private BgmMode currentBgmMode = BgmMode.NORMAL;
     private boolean bgmPaused = true;
     private boolean released = false;
+    private boolean audioEnabled;
 
     public GameAudioManager(Context context) {
         this.appContext = context.getApplicationContext();
+        this.audioEnabled = AudioSettings.isAudioEnabled(appContext);
 
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_GAME)
@@ -63,14 +65,22 @@ public class GameAudioManager {
     }
 
     public void startNormalBgm() {
+        refreshAudioEnabled();
         currentBgmMode = BgmMode.NORMAL;
         bgmPaused = false;
+        if (!audioEnabled) {
+            return;
+        }
         switchBgm(getNormalBgmPlayer());
     }
 
     public void startBossBgm() {
+        refreshAudioEnabled();
         currentBgmMode = BgmMode.BOSS;
         bgmPaused = false;
+        if (!audioEnabled) {
+            return;
+        }
         switchBgm(getBossBgmPlayer());
     }
 
@@ -88,7 +98,11 @@ public class GameAudioManager {
     }
 
     public void resumeBgm() {
+        refreshAudioEnabled();
         if (released || !bgmPaused) {
+            return;
+        }
+        if (!audioEnabled) {
             return;
         }
         if (currentBgmMode == BgmMode.BOSS) {
@@ -137,10 +151,15 @@ public class GameAudioManager {
     }
 
     private void playSound(int soundId) {
-        if (released || soundId == 0) {
+        refreshAudioEnabled();
+        if (released || soundId == 0 || !audioEnabled) {
             return;
         }
         soundPool.play(soundId, EFFECT_VOLUME, EFFECT_VOLUME, 1, 0, 1f);
+    }
+
+    private void refreshAudioEnabled() {
+        audioEnabled = AudioSettings.isAudioEnabled(appContext);
     }
 
     private void switchBgm(MediaPlayer targetPlayer) {

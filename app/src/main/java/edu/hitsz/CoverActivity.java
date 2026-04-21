@@ -3,8 +3,11 @@ package edu.hitsz;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.Switch;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import edu.hitsz.audio.AudioSettings;
 
 public class CoverActivity extends AppCompatActivity {
 
@@ -17,6 +20,11 @@ public class CoverActivity extends AppCompatActivity {
         Button btnNormal = findViewById(R.id.btnNormal);
         Button btnHard = findViewById(R.id.btnHard);
         Button btnRankings = findViewById(R.id.btnRankings);
+        Switch switchAudio = findViewById(R.id.switchAudio);
+
+        switchAudio.setChecked(AudioSettings.isAudioEnabled(this));
+        switchAudio.setOnCheckedChangeListener((buttonView, isChecked) ->
+                AudioSettings.setAudioEnabled(this, isChecked));
 
         btnEasy.setOnClickListener(v -> startGame(1));
         btnNormal.setOnClickListener(v -> startGame(2));
