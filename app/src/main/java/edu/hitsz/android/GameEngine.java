@@ -56,7 +56,7 @@ public class GameEngine {
     private double elitePlusProbability;
     private boolean bossExists = false;
     private int bossScoreThreshold;
-    private int bossHp;
+    private final int bossHp;
     private int score = 0;
     private int lastScore = 0;
     private int backGroundTop = 0;
@@ -118,6 +118,10 @@ public class GameEngine {
 
     public int getLastScore() {
         return lastScore;
+    }
+
+    public int getScore() {
+        return score;
     }
 
     public String getDifficulty() {
@@ -294,14 +298,14 @@ public class GameEngine {
     private void updateDifficulty() {
         if ("Normal".equals(difficulty)) {
             if (time > 30000) {
-                cycleDurationMs = Math.max(400, 600 - time / 100);
+                cycleDurationMs = 400;
             }
             if (time > 60000) {
                 enemyMaxNumber = Math.min(7, 5 + time / 30000);
             }
         } else if ("Hard".equals(difficulty)) {
             if (time > 20000) {
-                cycleDurationMs = Math.max(200, 400 - time / 80);
+                cycleDurationMs = 200;
             }
             if (time > 30000) {
                 enemyMaxNumber = Math.min(10, 7 + time / 20000);
