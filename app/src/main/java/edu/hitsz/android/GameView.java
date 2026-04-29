@@ -40,8 +40,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Thread gameThread;
     private boolean gameOverHandled = false;
     private int lastSentScore = -1;
-    private int remoteScore = 0;
-    private boolean remoteDead = false;
+    private volatile int remoteScore = 0;
+    private volatile boolean remoteDead = false;
     private boolean localDeadNotified = false;
     private final boolean onlineMode;
     private volatile boolean matchReady = false;

@@ -1,14 +1,18 @@
 #AircraftWar user data
-#Wed Apr 29 10:49:51 CST 2026
+#Wed Apr 29 11:27:22 CST 2026
 user.Wendy.coins=44
 user.Wendy.password=8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
 user.Wendy.audioEnabled=true
+user.wendy2.audioEnabled=true
+user.wendy2.password=8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
 user.zqx.audioEnabled=true
 user.zqx.password=8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
 user.Wendy.unlockedDifficulty=1
+user.wendy2.unlockedDifficulty=1
 user.zqx.unlockedDifficulty=1
 user.wendy.password=8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
 user.wendy.coins=0
 user.wendy.audioEnabled=true
+user.wendy2.coins=0
 user.wendy.unlockedDifficulty=2
 user.zqx.coins=0
