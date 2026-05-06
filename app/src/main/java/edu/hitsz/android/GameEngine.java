@@ -60,6 +60,7 @@ public class GameEngine {
     private int score = 0;
     private int lastScore = 0;
     private int backGroundTop = 0;
+    private final boolean onlineMode;
 
     private final Bitmap backgroundImage;
     private final HeroAircraft heroAircraft;
@@ -70,12 +71,25 @@ public class GameEngine {
     private final UnifiedEnemyFactory enemyFactory;
     private GameAudioEventListener audioEventListener;
     private boolean gameOver = false;
+    private volatile boolean localPlayerDead = false;
+    private boolean localDeadNotified = false;
+    private boolean gameOverAudioPlayed = false;
+    private volatile int opponentScore = 0;
+    private volatile boolean opponentDead = false;
+    private volatile String opponentName = "Opponent";
+    private volatile String onlineResultText = "";
+    private OnlineGameEventListener onlineGameEventListener;
 
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint gameOverPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     public GameEngine(String difficulty) {
+        this(difficulty, false);
+    }
+
+    public GameEngine(String difficulty, boolean onlineMode) {
         this.difficulty = difficulty;
+        this.onlineMode = onlineMode;
         this.backgroundImage = getBackgroundImage();
 
         EnemyConfig enemyConfig = getEnemyConfig();
@@ -116,8 +130,20 @@ public class GameEngine {
         return gameOver;
     }
 
+    public boolean isOnlineMode() {
+        return onlineMode;
+    }
+
+    public boolean isLocalPlayerDead() {
+        return localPlayerDead;
+    }
+
     public int getLastScore() {
         return lastScore;
+    }
+
+    public int getScore() {
+        return score;
     }
 
     public String getDifficulty() {
@@ -128,15 +154,44 @@ public class GameEngine {
         this.audioEventListener = audioEventListener;
     }
 
+    public void setOnlineGameEventListener(OnlineGameEventListener onlineGameEventListener) {
+        this.onlineGameEventListener = onlineGameEventListener;
+    }
+
+    public void setOpponentName(String opponentName) {
+        if (opponentName != null && !opponentName.trim().isEmpty()) {
+            this.opponentName = opponentName;
+        }
+    }
+
+    public void updateOpponentScore(int opponentScore) {
+        this.opponentScore = opponentScore;
+    }
+
+    public void markOpponentDead(int opponentScore) {
+        this.opponentScore = opponentScore;
+        this.opponentDead = true;
+    }
+
+    public void applyOnlineGameOver(int selfScore, int opponentScore, String resultText) {
+        this.score = selfScore;
+        this.lastScore = selfScore;
+        this.opponentScore = opponentScore;
+        this.opponentDead = true;
+        this.onlineResultText = resultText == null ? "" : resultText;
+        this.gameOver = true;
+        playGameOverAudioOnce();
+    }
+
     public void setHeroLocation(int logicalX, int logicalY) {
-        if (gameOver) {
+        if (gameOver || localPlayerDead) {
             return;
         }
         heroAircraft.setLocation(logicalX, logicalY);
     }
 
     public void tick() {
-        if (gameOver) {
+        if (gameOver || localPlayerDead) {
             return;
         }
 
@@ -175,10 +230,17 @@ public class GameEngine {
         postProcessAction();
 
         if (heroAircraft.getHp() <= 0) {
-            gameOver = true;
             lastScore = score;
-            if (audioEventListener != null) {
-                audioEventListener.onGameOver();
+            if (onlineMode) {
+                localPlayerDead = true;
+                playGameOverAudioOnce();
+                if (!localDeadNotified && onlineGameEventListener != null) {
+                    localDeadNotified = true;
+                    onlineGameEventListener.onLocalPlayerDead(lastScore, difficulty);
+                }
+            } else {
+                gameOver = true;
+                playGameOverAudioOnce();
             }
         }
     }
@@ -390,7 +452,7 @@ public class GameEngine {
 
                     if (enemy.notValid() && enemy instanceof AbstractEnemy) {
                         AbstractEnemy defeatedEnemy = (AbstractEnemy) enemy;
-                        score += defeatedEnemy.getScore();
+                        addScore(defeatedEnemy.getScore());
                         props.addAll(defeatedEnemy.mayDrop());
 
                         if (defeatedEnemy instanceof BossEnemy) {
@@ -437,7 +499,7 @@ public class GameEngine {
                             bombScore += ((AbstractEnemy) enemy).getScore();
                         }
                     }
-                    score += bombScore;
+                    addScore(bombScore);
                 } else {
                     if (audioEventListener != null) {
                         audioEventListener.onSupplyCollected();
@@ -482,10 +544,50 @@ public class GameEngine {
 
         canvas.drawText("SCORE:" + score, 10, 25, textPaint);
         canvas.drawText("LIFE:" + heroAircraft.getHp(), 10, 45, textPaint);
+        if (onlineMode) {
+            canvas.drawText("OPPONENT:" + opponentScore, 10, 65, textPaint);
+            canvas.drawText("OPPONENT NAME:" + opponentName, 10, 85, textPaint);
+            if (opponentDead && !gameOver) {
+                canvas.drawText("OPPONENT DEAD", 10, 105, textPaint);
+            }
+            if (localPlayerDead && !gameOver) {
+                canvas.drawText("YOU ARE DOWN", 90, 360, gameOverPaint);
+                canvas.drawText("WAITING OPPONENT...", 20, 420, gameOverPaint);
+                canvas.drawText("YOUR SCORE:" + lastScore, 50, 480, gameOverPaint);
+            }
+        }
 
         if (gameOver) {
-            canvas.drawText("GAME OVER", 70, 380, gameOverPaint);
-            canvas.drawText("SCORE:" + lastScore, 110, 440, gameOverPaint);
+            if (onlineMode) {
+                canvas.drawText("MATCH OVER", 50, 360, gameOverPaint);
+                canvas.drawText(onlineResultText, 70, 420, gameOverPaint);
+                canvas.drawText("YOU:" + lastScore, 90, 480, gameOverPaint);
+                canvas.drawText("OPP:" + opponentScore, 90, 540, gameOverPaint);
+            } else {
+                canvas.drawText("GAME OVER", 70, 380, gameOverPaint);
+                canvas.drawText("SCORE:" + lastScore, 110, 440, gameOverPaint);
+            }
+        }
+    }
+
+    private void addScore(int delta) {
+        if (delta <= 0) {
+            return;
+        }
+        score += delta;
+        if (onlineMode && onlineGameEventListener != null) {
+            // Score changes happen inside the engine, so this is the smallest sync hook.
+            onlineGameEventListener.onScoreChanged(score);
+        }
+    }
+
+    private void playGameOverAudioOnce() {
+        if (gameOverAudioPlayed) {
+            return;
+        }
+        gameOverAudioPlayed = true;
+        if (audioEventListener != null) {
+            audioEventListener.onGameOver();
         }
     }
 

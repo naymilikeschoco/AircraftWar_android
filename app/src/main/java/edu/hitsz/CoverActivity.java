@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.Switch;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -14,13 +15,24 @@ public class CoverActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        UserSessionManager sessionManager = new UserSessionManager(this);
+        if (!sessionManager.isLoggedIn()) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
+        }
         setContentView(R.layout.activity_cover);
 
         Button btnEasy = findViewById(R.id.btnEasy);
         Button btnNormal = findViewById(R.id.btnNormal);
         Button btnHard = findViewById(R.id.btnHard);
+        Button btnOnline = findViewById(R.id.btnOnline);
         Button btnRankings = findViewById(R.id.btnRankings);
+        Button btnLogout = findViewById(R.id.btnLogout);
         Switch switchAudio = findViewById(R.id.switchAudio);
+        TextView tvCurrentUser = findViewById(R.id.tvCurrentUser);
+
+        tvCurrentUser.setText("Current user: " + sessionManager.getCurrentUsername());
 
         switchAudio.setChecked(AudioSettings.isAudioEnabled(this));
         switchAudio.setOnCheckedChangeListener((buttonView, isChecked) ->
@@ -29,7 +41,13 @@ public class CoverActivity extends AppCompatActivity {
         btnEasy.setOnClickListener(v -> startGame(1));
         btnNormal.setOnClickListener(v -> startGame(2));
         btnHard.setOnClickListener(v -> startGame(3));
+        btnOnline.setOnClickListener(v -> startActivity(new Intent(this, OnlineSetupActivity.class)));
         btnRankings.setOnClickListener(v -> startActivity(new Intent(this, RankActivity.class)));
+        btnLogout.setOnClickListener(v -> {
+            sessionManager.logout();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+        });
     }
 
     private void startGame(int difficulty) {

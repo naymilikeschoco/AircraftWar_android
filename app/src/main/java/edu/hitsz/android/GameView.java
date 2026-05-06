@@ -28,29 +28,25 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private final Handler uiHandler;
     private GameEngine game;
     private GameOverListener gameOverListener;
+    private OnlineGameEventListener onlineGameEventListener;
 
     private volatile boolean running = false;
     private Thread gameThread;
     private boolean gameOverHandled = false;
 
     public GameView(Context context) {
-        this(context, null);
+        this(context, null, 1, false);
     }
 
     public GameView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        holder = getHolder();
-        holder.addCallback(this);
-        audioManager = new GameAudioManager(context);
-        uiHandler = createUiHandler();
-
-        ImageManager.init(context.getApplicationContext());
-        game = new GameEngine("Easy");
-        bindAudioEvents();
-        setFocusable(true);
+        this(context, attrs, 1, false);
     }
 
     public GameView(Context context, AttributeSet attrs, int difficulty) {
+        this(context, attrs, difficulty, false);
+    }
+
+    public GameView(Context context, AttributeSet attrs, int difficulty, boolean onlineMode) {
         super(context, attrs);
         holder = getHolder();
         holder.addCallback(this);
@@ -60,16 +56,16 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         ImageManager.init(context.getApplicationContext());
         switch (difficulty) {
             case 1:
-                game = new GameEngine("Easy");
+                game = new GameEngine("Easy", onlineMode);
                 break;
             case 2:
-                game = new GameEngine("Normal");
+                game = new GameEngine("Normal", onlineMode);
                 break;
             case 3:
-                game = new GameEngine("Hard");
+                game = new GameEngine("Hard", onlineMode);
                 break;
             default:
-                game = new GameEngine("Easy");
+                game = new GameEngine("Easy", onlineMode);
                 break;
         }
         bindAudioEvents();
@@ -78,6 +74,27 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     public void setGameOverListener(GameOverListener gameOverListener) {
         this.gameOverListener = gameOverListener;
+    }
+
+    public void setOnlineGameEventListener(OnlineGameEventListener onlineGameEventListener) {
+        this.onlineGameEventListener = onlineGameEventListener;
+        game.setOnlineGameEventListener(onlineGameEventListener);
+    }
+
+    public void setOpponentName(String opponentName) {
+        game.setOpponentName(opponentName);
+    }
+
+    public void updateOpponentScore(int score) {
+        game.updateOpponentScore(score);
+    }
+
+    public void markOpponentDead(int finalScore) {
+        game.markOpponentDead(finalScore);
+    }
+
+    public void showOnlineGameOver(int selfScore, int opponentScore, String resultText) {
+        game.applyOnlineGameOver(selfScore, opponentScore, resultText);
     }
 
     @Override
@@ -210,12 +227,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void onResumeView() {
-        if (holder.getSurface().isValid()) {
+        if (holder.getSurface().isValid() && !game.isGameOver() && !game.isLocalPlayerDead()) {
             audioManager.resumeBgm();
         }
     }
 
     public void release() {
+        game.setOnlineGameEventListener(null);
         audioManager.release();
     }
 
