@@ -3,3 +3,5 @@
 build/
 app/build/
 .idea/
+server/bin/
+*/build/

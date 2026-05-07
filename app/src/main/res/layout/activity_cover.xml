@@ -1,84 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp"
-    android:background="#101820">
+    android:background="#05070D">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="Aircraft War"
-        android:textColor="#FFFFFF"
-        android:textSize="34sp"
-        android:textStyle="bold" />
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="Game cover poster"
+        android:scaleType="fitXY"
+        android:src="@drawable/cover_poster" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Choose difficulty or view rankings"
-        android:textColor="#C6D4DF"
-        android:textSize="16sp"
-        android:layout_marginBottom="28dp" />
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/cover_scrim" />
 
-    <TextView
-        android:id="@+id/tvCurrentUser"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        android:orientation="vertical"
+        android:padding="20dp">
 
-    <Switch
-        android:id="@+id/switchAudio"
-        android:layout_width="220dp"
-        android:layout_height="wrap_content"
-        android:text="Audio"
-        android:textColor="#FFFFFF"
-        android:layout_marginBottom="20dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/cover_panel_background"
+            android:elevation="6dp"
+            android:orientation="vertical"
+            android:padding="20dp">
 
-    <Button
-        android:id="@+id/btnEasy"
-        android:layout_width="220dp"
-        android:layout_height="wrap_content"
-        android:text="Easy"
-        android:layout_marginBottom="12dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Combat Ready"
+                android:textAllCaps="true"
+                android:textColor="#FFE7BF"
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/btnNormal"
-        android:layout_width="220dp"
-        android:layout_height="wrap_content"
-        android:text="Normal"
-        android:layout_marginBottom="12dp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Choose your mission"
+                android:textColor="#FFFFFF"
+                android:textSize="28sp"
+                android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/btnHard"
-        android:layout_width="220dp"
-        android:layout_height="wrap_content"
-        android:text="Hard"
-        android:layout_marginBottom="12dp" />
+            <TextView
+                android:id="@+id/tvCurrentUser"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="16dp"
+                android:textColor="#D5DEFF"
+                android:textSize="15sp" />
 
-    <Button
-        android:id="@+id/btnOnline"
-        android:layout_width="220dp"
-        android:layout_height="wrap_content"
-        android:text="Online Battle"
-        android:layout_marginBottom="12dp" />
+            <Switch
+                android:id="@+id/switchAudio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:background="#1AFFFFFF"
+                android:padding="12dp"
+                android:text="Audio"
+                android:textColor="#FFFFFF" />
 
-    <Button
-        android:id="@+id/btnRankings"
-        android:layout_width="220dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="12dp"
-        android:text="Rankings" />
+            <Button
+                android:id="@+id/btnEasy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:backgroundTint="#FF8A1F"
+                android:text="Easy"
+                android:textColor="#FFFFFF" />
 
-    <Button
-        android:id="@+id/btnLogout"
-        android:layout_width="220dp"
-        android:layout_height="wrap_content"
-        android:text="Logout" />
+            <Button
+                android:id="@+id/btnNormal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:backgroundTint="#FF6A3D"
+                android:text="Normal"
+                android:textColor="#FFFFFF" />
 
-</LinearLayout>
+            <Button
+                android:id="@+id/btnHard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:backgroundTint="#FF4B5C"
+                android:text="Hard"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/btnOnline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:backgroundTint="#4A4FFF"
+                android:text="Online Battle"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/btnRankings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:backgroundTint="#2D3648"
+                android:text="Rankings"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/btnLogout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:backgroundTint="#1C2230"
+                android:text="Logout"
+                android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

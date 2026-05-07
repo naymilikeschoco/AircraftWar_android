@@ -60,11 +60,11 @@ public class GameServer {
 
     public void start() throws IOException {
         serverSocket = new ServerSocket(port);
-        log("服务器启动，监听端口 " + port);
+        log("Server start, listening to " + port);
         while (true) {
             Socket socket = serverSocket.accept();
             PlayerSession session = new PlayerSession(socket);
-            log("客户端接入：" + session.remoteAddress);
+            log("Client in :" + session.remoteAddress);
             clientExecutor.execute(() -> handleClient(session));
         }
     }
@@ -76,9 +76,9 @@ public class GameServer {
                 handleMessage(session, ProtocolMessage.parse(line));
             }
         } catch (IOException e) {
-            log("连接异常断开：" + session.displayName() + " - " + e.getMessage());
+            log("Connection failed:" + session.displayName() + " - " + e.getMessage());
         } finally {
-            cleanupSession(session, "连接已断开");
+            cleanupSession(session, "Connection disabled");
         }
     }
 
@@ -97,7 +97,7 @@ public class GameServer {
                 handleDead(session, message.getInt("score", 0));
                 break;
             case "DISCONNECT":
-                cleanupSession(session, "玩家主动退出");
+                cleanupSession(session, "player leaves");
                 break;
             case "HEARTBEAT":
                 session.lastHeartbeatAt = System.currentTimeMillis();
@@ -112,7 +112,7 @@ public class GameServer {
         if (username.isEmpty()) {
             session.send(ProtocolMessage.of("LOGIN_RESULT")
                     .put("success", false)
-                    .put("reason", "用户名不能为空"));
+                    .put("reason", "username can't be null"));
             return;
         }
 
@@ -124,7 +124,7 @@ public class GameServer {
             if (activeUsernames.contains(username)) {
                 session.send(ProtocolMessage.of("LOGIN_RESULT")
                         .put("success", false)
-                        .put("reason", "用户名已被占用"));
+                        .put("reason", "username has been taken"));
                 return;
             }
             activeUsernames.add(username);
@@ -132,7 +132,7 @@ public class GameServer {
             session.loggedIn = true;
         }
 
-        log("玩家登录成功：" + username);
+        log("Logging in succeed" + username);
         session.send(ProtocolMessage.of("LOGIN_RESULT").put("success", true));
     }
 
@@ -158,7 +158,7 @@ public class GameServer {
                 session.room = room;
                 rooms.put(roomId, room);
 
-                log("匹配成功：房间#" + roomId + "，" + waitingPlayer.username + " VS " + session.username);
+                log("Matched:Room #" + roomId + "，" + waitingPlayer.username + " VS " + session.username);
                 waitingPlayer.send(ProtocolMessage.of("MATCHED")
                         .put("roomId", roomId)
                         .put("opponent", session.username));
@@ -169,7 +169,7 @@ public class GameServer {
             }
 
             waitingPlayers.offer(session);
-            log("玩家进入等待队列：" + session.username);
+            log("player in waiting line" + session.username);
             session.send(ProtocolMessage.of("WAITING").put("message", "waiting"));
         }
     }
@@ -184,7 +184,7 @@ public class GameServer {
             return;
         }
 
-        log("分数更新：" + session.username + " -> " + score);
+        log("score updated" + session.username + " -> " + score);
         opponent.send(ProtocolMessage.of("SCORE_UPDATE").put("score", score));
     }
 
@@ -196,7 +196,7 @@ public class GameServer {
 
         session.dead = true;
         session.finalScore = finalScore;
-        log("玩家死亡：" + session.username + "，最终分数 " + finalScore);
+        log("player died: " + session.username + ", ultimate score: " + finalScore);
 
         PlayerSession opponent = room.getOpponent(session);
         if (opponent != null && !opponent.isClosed()) {
@@ -218,7 +218,7 @@ public class GameServer {
 
         PlayerSession first = room.playerA;
         PlayerSession second = room.playerB;
-        log("游戏结束：房间#" + room.roomId + "，"
+        log("Game over, Room #" + room.roomId + "，"
                 + first.username + "=" + first.finalScore + "，"
                 + second.username + "=" + second.finalScore);
 
@@ -269,13 +269,13 @@ public class GameServer {
                 opponent.room = null;
                 if (!room.gameOverSent && !opponent.isClosed()) {
                     opponent.send(ProtocolMessage.of("DISCONNECTED")
-                            .put("reason", session.displayName() + " 已断开连接"));
+                            .put("reason", session.displayName() + " connection disabled"));
                 }
             }
         }
 
         session.close();
-        log("玩家断开：" + session.displayName() + "，原因：" + reason);
+        log("player disconnected: " + session.displayName() + ", Reason:" + reason);
     }
 
     private void log(String message) {
@@ -355,7 +355,7 @@ public class GameServer {
                 writer.newLine();
                 writer.flush();
             } catch (IOException e) {
-                cleanupSession(this, "发送消息失败");
+                cleanupSession(this, "Message transmission failed");
             }
         }
 
